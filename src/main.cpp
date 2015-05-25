@@ -8,27 +8,18 @@
 #include <SDL2/SDL.h>
 #include <ctime>
 
-#include "assert.h"
+#include "debug/assert.h"
 
-#ifdef WIN32
-  #include <windows.h>      // must be included before GL
-#endif
+#include "graphics/opengl.h"
+#include "graphics/Texture.hpp"
 
-#include <GL/gl.h>    // PC uses OpenGL rather than OpenGL ES
+#include "global.hpp"
 
 // --------------------------------------------------------------------------
 // --------------------------------------------------------------------------
 // -------------------------- CONSTANTS
 // --------------------------------------------------------------------------
 // --------------------------------------------------------------------------
-
-// --------------------------------------------------------------------------
-// WINDOW
-// --------------------------------------------------------------------------
-
-#define WINDOW_DEFAULT_W 640
-#define WINDOW_DEFAULT_H 480
-#define MAX_FPS 30
 
 // --------------------------------------------------------------------------
 // OPENGL
@@ -51,6 +42,8 @@
 // --------------------------------------------------------------------------
 
 static SDL_Window *window;
+
+static Texture texture;
 
 static float prev_tick, this_tick, next_tick;
 
@@ -122,6 +115,9 @@ char treatEvents()
       break;
     }
   }
+
+  // no event
+  return 0;
 }
 
 // --------------------------------------------------------------------------
@@ -144,6 +140,9 @@ int main ( int argc, char** argv, char** envp)
                            SDL_WINDOWPOS_UNDEFINED, WINDOW_DEFAULT_W,
                            WINDOW_DEFAULT_H, SDL_WINDOW_OPENGL|SDL_WINDOW_SHOWN);
   ASSERT_SDL(window, "Opening SDL2.0 application window");
+
+  // Since the window size can be overriden, check what it is actually
+  SDL_GetWindowSize(window, &global::viewport.x, &global::viewport.y);
 
   // Create the OpenGL context for the window we just opened
   auto context = SDL_GL_CreateContext(window);
@@ -190,6 +189,12 @@ int main ( int argc, char** argv, char** envp)
   // Clean the slate
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
+
+  // --------------------------------------------------------------------------
+  // LOAD AN IMAGE
+  // --------------------------------------------------------------------------
+
+  texture.load("assets/eye_of_draining.png");
 
   // --------------------------------------------------------------------------
   // START THE GAME LOOP

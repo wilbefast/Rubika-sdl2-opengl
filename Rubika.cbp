@@ -35,11 +35,20 @@
 		<Linker>
 			<Add option="-lSDL2 -lSDL2_image -lGL" />
 		</Linker>
-		<Unit filename="src/assert.h" />
-		<Unit filename="src/log.cpp" />
-		<Unit filename="src/log.h" />
+		<Unit filename="src/debug/assert.h" />
+		<Unit filename="src/debug/log.cpp" />
+		<Unit filename="src/debug/log.h" />
+		<Unit filename="src/debug/warn.h" />
+		<Unit filename="src/global.cpp" />
+		<Unit filename="src/global.hpp" />
+		<Unit filename="src/graphics/Texture.cpp" />
+		<Unit filename="src/graphics/Texture.hpp" />
+		<Unit filename="src/graphics/opengl.h" />
 		<Unit filename="src/main.cpp" />
-		<Unit filename="src/warn.h" />
+		<Unit filename="src/math/Rect.hpp" />
+		<Unit filename="src/math/V2.hpp" />
+		<Unit filename="src/math/wjd_math.cpp" />
+		<Unit filename="src/math/wjd_math.h" />
 		<Extensions>
 			<envvars />
 			<code_completion />
