@@ -30,3 +30,18 @@ void log(unsigned int level, const char* format, ...)
   va_end(arguments);
 #endif // #ifdef DEBUG
 }
+
+void log(const char* format, ...)
+{
+#ifdef DEBUG
+  // get arguments
+  va_list arguments;
+  va_start(arguments, format);
+
+  // send to auxillary function
+  log(LOG_INFO, format, arguments);
+
+  // don't forget to clean up!
+  va_end(arguments);
+#endif // #ifdef DEBUG
+}

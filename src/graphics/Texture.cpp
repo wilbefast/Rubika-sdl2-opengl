@@ -61,8 +61,8 @@ int Texture::from_surface(SDL_Surface* surface)
   {
     // enlarge the surface if needed
     SDL_Surface* previous_surface = surface;
+    // NB - Hexadecimal parameters are: Rmask, Gmask, Bmask and Amask
     surface = SDL_CreateRGBSurface(0, area.w, area.h, 32,
-      /* NB - Hexadecimal parameters are: Rmask, Gmask, Bmask and Amask */
                                 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
     // past contents of previous (small) surface onto new (larger) surface
     SDL_BlitSurface(previous_surface, 0, surface, 0);

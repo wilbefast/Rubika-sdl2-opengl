@@ -32,17 +32,28 @@ static SDL_Window *window;
 
 static Texture texture;
 
-static float prev_tick, this_tick, next_tick;
-
 //! --------------------------------------------------------------------------
 //! -------------------------- GAME LOOP
 //! --------------------------------------------------------------------------
+
+int update(float dt)
+{
+
+
+  // no event
+  return 0;
+}
+
+fRect r(0, 0, 128, 128);
 
 int draw()
 {
   // Clear and reset
   glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
   glMatrixMode(GL_MODELVIEW);
+
+  // Draw the scene
+  texture.draw(nullptr, nullptr);
 
   // Flip the buffers to update the screen
   SDL_GL_SwapWindow(window);
@@ -51,25 +62,7 @@ int draw()
   return EXIT_SUCCESS;
 }
 
-// Regulate the number of frames per second, pausing only if need be
-int wait()
-{
-  // Get the current time-stamp
-  prev_tick = this_tick;
-  this_tick = SDL_GetTicks();
-
-  // If it's not yet time for the next update, wait a while
-	if (this_tick < next_tick )
-		SDL_Delay(next_tick - this_tick);
-
-  // Calculate when the next update should be
-	next_tick = this_tick + (1000/MAX_FPS);
-
-  // All good
-	return EXIT_SUCCESS;
-}
-
-char treatEvents()
+int treatEvents()
 {
   // static to avoid reallocating it ever time we run the function
   static SDL_Event event;
@@ -119,6 +112,8 @@ int main(int argc, char *argv[])
   // START SDL
   // --------------------------------------------------------------------------
 
+  {
+
   // Set up SDL (create window and context for OpenGL)
 	window = SDL_CreateWindow("Rubika", SDL_WINDOWPOS_UNDEFINED,
                            SDL_WINDOWPOS_UNDEFINED, WINDOW_DEFAULT_W,
@@ -127,6 +122,7 @@ int main(int argc, char *argv[])
 
   // Since the window size can be overriden, check what it is actually
   SDL_GetWindowSize(window, &global::viewport.x, &global::viewport.y);
+  global::scale.x = global::scale.y = 1.0f;
 
   // Create the OpenGL context for the window we just opened
   auto context = SDL_GL_CreateContext(window);
@@ -138,9 +134,13 @@ int main(int argc, char *argv[])
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, GL_V_MINOR);
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
+  } // start sdl
+
   // --------------------------------------------------------------------------
   // START OPENGL
   // --------------------------------------------------------------------------
+
+  {
 
   // Define viewport
   glViewport(0, 0, WINDOW_DEFAULT_W, WINDOW_DEFAULT_H);
@@ -174,31 +174,38 @@ int main(int argc, char *argv[])
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 
+  } // start opengl
+
   // --------------------------------------------------------------------------
   // LOAD AN IMAGE
   // --------------------------------------------------------------------------
 
-  texture.load("assets/eye_of_draining.png");
+  ASSERT(texture.load("assets/eye_of_draining.png") == EXIT_SUCCESS, "Opening texture");
 
   // --------------------------------------------------------------------------
   // START THE GAME LOOP
   // --------------------------------------------------------------------------
 
+  {
+
+  float prev_tick, this_tick = SDL_GetTicks();
   bool stop = false;
   do
   {
+    // Get the current time-stamp
+    prev_tick = this_tick;
+    this_tick = SDL_GetTicks();
+    update(this_tick - prev_tick);
+
     // Redraw everything, game objects included
     draw();
 
-    // Regulate the number of frames per second, pausing if need be
-    wait();
-
     // Treat input events, check for exit conditions.
-    char flags = treatEvents();
-    if(flags)
-      stop = true;
+    stop = (treatEvents() & EVENT_QUIT);
   }
   while(!stop);
+
+  } // game loop
 
   // --------------------------------------------------------------------------
   // SHUT DOWN

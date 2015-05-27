@@ -5,3 +5,5 @@
 #define LOG_ERROR 2
 
 void log(unsigned int level, const char* format, ...);
+
+void log(const char* format, ...);
