@@ -11,6 +11,8 @@
 #include "graphics/opengl.h"
 #include "graphics/Texture.hpp"
 
+#include "math/wjd_math.h"
+
 #include "global.hpp"
 
 //! --------------------------------------------------------------------------
@@ -32,19 +34,40 @@ static SDL_Window *window;
 
 static Texture texture;
 
+#define N_SPRITES 4
+static fRect sprites[N_SPRITES] = {
+  fRect(256, 128, 32, 32),
+  fRect(128, 256, 64, 64),
+  fRect(256, 512, 32, 32),
+  fRect(512, 128, 48, 48)
+};
+
 //! --------------------------------------------------------------------------
 //! -------------------------- GAME LOOP
 //! --------------------------------------------------------------------------
 
+static float t = 0.0f;
+
 int update(float dt)
 {
+  // Cap delta-time
+  if(dt > MAX_DT)
+    dt = MAX_DT;
 
+  // You spin me right round baby right round
+  t += 0.5f*dt;
+  if(t > 1.0f)
+    t -= 1.0f;
+  float wave = cos(2*PI*t);
 
-  // no event
+  // Update the scene
+  auto s = sprites;
+  while(s < sprites + N_SPRITES)
+    (s++)->x += wave*256*dt;
+
+  // No event
   return 0;
 }
-
-fRect r(0, 0, 128, 128);
 
 int draw()
 {
@@ -53,7 +76,9 @@ int draw()
   glMatrixMode(GL_MODELVIEW);
 
   // Draw the scene
-  texture.draw(nullptr, nullptr);
+  auto s = sprites;
+  while(s < sprites + N_SPRITES)
+    texture.draw(nullptr, s++); // #YOLO
 
   // Flip the buffers to update the screen
   SDL_GL_SwapWindow(window);
@@ -64,20 +89,20 @@ int draw()
 
 int treatEvents()
 {
-  // static to avoid reallocating it ever time we run the function
+  // Static to avoid reallocating it ever time we run the function
   static SDL_Event event;
 
-  // write each event to our static variable
+  // Write each event to our static variable
   while (SDL_PollEvent(&event))
   {
     switch (event.type)
     {
-      // exit if the window is closed (ex: pressing the cross at the top)
+      // Exit if the window is closed (ex: pressing the cross at the top)
       case SDL_QUIT:
         return EVENT_QUIT;
       break;
 
-      // check for keypresses
+      // Check for keypresses
       case SDL_KEYDOWN:
         switch (event.key.keysym.sym)
         {
@@ -94,7 +119,7 @@ int treatEvents()
     }
   }
 
-  // no event
+  // No event
   return 0;
 }
 
@@ -195,7 +220,7 @@ int main(int argc, char *argv[])
     // Get the current time-stamp
     prev_tick = this_tick;
     this_tick = SDL_GetTicks();
-    update(this_tick - prev_tick);
+    update((this_tick - prev_tick)/1000.0f);
 
     // Redraw everything, game objects included
     draw();
