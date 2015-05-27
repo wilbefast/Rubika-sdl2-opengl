@@ -12,6 +12,7 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
+					<Add option="-std=c++11" />
 					<Add option="-g" />
 					<Add option="-DDEBUG" />
 				</Compiler>
@@ -30,11 +31,17 @@
 			</Target>
 		</Build>
 		<Compiler>
+			<Add option="-std=c++11" />
 			<Add option="-Wall" />
 			<Add option="`sdl-config --cflags`" />
+			<Add directory="%SDL_ROOT%/include/SDL2" />
+			<Add directory="%SDL_IMAGE_ROOT%/include/SDL2/" />
 		</Compiler>
 		<Linker>
-			<Add option="-lSDL2 -lSDL2_image -lGL" />
+			<Add option="-lmingw32 -lSDL2 -lSDL2main -lSDL2_image -lSDL2.dll" />
+			<Add library="opengl32" />
+			<Add directory="%SDL_ROOT%/lib" />
+			<Add directory="%SDL_IMAGE_ROOT%/lib" />
 		</Linker>
 		<Unit filename="src/debug/assert.h" />
 		<Unit filename="src/debug/log.cpp" />

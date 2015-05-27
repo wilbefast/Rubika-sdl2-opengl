@@ -1,3 +1,7 @@
+//! --------------------------------------------------------------------------
+//! -------------------------- INCLUDES
+//! --------------------------------------------------------------------------
+
 #include "Texture.hpp"
 
 #include "SDL.h"                    // Needed for IMG_Load
@@ -9,11 +13,9 @@
 #include "../math/wjd_math.h"       // Needed for ISPWR2
 #include "../global.hpp"
 
-#define FLIP_HORIZONTAL 0b00000001
-#define FLIP_VERTICAL 0b00000010
-
-
-/// CONSTRUCTORS, DESTRUCTORS
+//! --------------------------------------------------------------------------
+//! -------------------------- CONSTRUCTORS, DESTRUCTOR
+//! --------------------------------------------------------------------------
 
 Texture::Texture() :
 handle(0),
@@ -121,8 +123,9 @@ Texture::~Texture()
   // don't force unload here: this may not be the only copy of the handle!
 }
 
-
-/// ACCESSORS
+//! --------------------------------------------------------------------------
+//! -------------------------- ACCESSORS
+//! --------------------------------------------------------------------------
 
 iRect Texture::getArea() const
 {
@@ -147,14 +150,12 @@ void Texture::draw(const fRect* src_ptr, const fRect* dst_ptr, float angle)
   fRect dst(global::viewport);
   if(dst_ptr) // if no destination is given the full viewport is used!
     dst = (*dst_ptr);
-    //dst = dst_ptr->getInter(global::viewport); // reacts badly with rotations
 
   // Set up position, rotation, colour
   glTranslatef(global::scale.x*(dst.x + dst.w/2),
                 global::scale.y*(dst.y + dst.h/2), 0.0);
   glRotatef(angle, 0.0, 0.0, 1.0);
   glScalef(global::scale.x, global::scale.y, 0.0f);
-  //glColor4f(255.0, 255.0, 255.0, 255.0); // reacts badly with Android
 
   // Bind the texture to which subsequent calls refer to
   glBindTexture(GL_TEXTURE_2D, handle);

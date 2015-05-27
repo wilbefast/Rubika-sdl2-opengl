@@ -5,10 +5,10 @@
 
 #define ASSERT_AUX_RTN(assertion, what, why, rtn)         \
 {                                                         \
-	if(!(assertion))                                        \
-	{									                                      \
-		log(LOG_ERROR, "%s - %s", what, why);	                \
-		return rtn;                                           \
+	if(!(assertion))                                      \
+	{									                  \
+		log(LOG_ERROR, "%s - %s", what, why);	          \
+		return rtn;                                       \
   }                                                       \
   else                                                    \
   {                                                       \
