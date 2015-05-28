@@ -38,11 +38,13 @@
 			<Add directory="%SDL_IMAGE_ROOT%/include/SDL2/" />
 		</Compiler>
 		<Linker>
-			<Add option="-lmingw32 -lSDL2 -lSDL2main -lSDL2_image -lSDL2.dll" />
+			<Add option="-lmingw32  -lSDL2 -lSDL2main -lSDL2_image -lSDL2.dll" />
 			<Add library="opengl32" />
 			<Add directory="%SDL_ROOT%/lib" />
 			<Add directory="%SDL_IMAGE_ROOT%/lib" />
 		</Linker>
+		<Unit filename="babysitter.cpp" />
+		<Unit filename="babysitter.h" />
 		<Unit filename="src/debug/assert.h" />
 		<Unit filename="src/debug/log.cpp" />
 		<Unit filename="src/debug/log.h" />

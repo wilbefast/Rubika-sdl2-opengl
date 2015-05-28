@@ -33,13 +33,7 @@ static SDL_Window *window;
 
 static Texture texture;
 
-#define N_SPRITES 4
-static fRect sprites[N_SPRITES] = {
-  fRect(256, 128, 32, 32),
-  fRect(128, 256, 64, 64),
-  fRect(256, 512, 32, 32),
-  fRect(512, 128, 48, 48)
-};
+fRect sprite(0, 0, 256, 256);
 
 //! --------------------------------------------------------------------------
 //! -------------------------- GAME LOOP
@@ -47,44 +41,8 @@ static fRect sprites[N_SPRITES] = {
 
 static float t = 0.0f;
 
-int update(float dt)
-{
-  // Cap delta-time
-  if(dt > MAX_DT)
-    dt = MAX_DT;
-
-  // You spin me right round baby right round
-  t += 0.5f*dt;
-  if(t > 1.0f)
-    t -= 1.0f;
-  float wave = cos(2*PI*t);
-
-  // Update the scene
-  auto s = sprites;
-  while(s < sprites + N_SPRITES)
-    (s++)->x += wave*256*dt;
-
-  // No event
-  return 0;
-}
-
-int draw()
-{
-  // Clear and reset
-  glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-  glMatrixMode(GL_MODELVIEW);
-
-  // Draw the scene
-  auto s = sprites;
-  while(s < sprites + N_SPRITES)
-    texture.draw(nullptr, s++); // #YOLO
-
-  // Flip the buffers to update the screen
-  SDL_GL_SwapWindow(window);
-
-  // All good
-  return EXIT_SUCCESS;
-}
+static float entering = -1.0f;
+static float exiting = -1.0f;
 
 int treatEvents()
 {
@@ -101,12 +59,18 @@ int treatEvents()
         return EVENT_QUIT;
       break;
 
-      // Check for keypresses
+      // Check for key-presses
       case SDL_KEYDOWN:
         switch (event.key.keysym.sym)
         {
+          case SDLK_RETURN:
+            if(entering < 0)
+              entering = 0;
+          break;
+
           case SDLK_ESCAPE:
-            return EVENT_QUIT;
+            if(entering >= 1 && exiting < 0)
+              exiting = 0;
           default:
             break;
         }
@@ -120,6 +84,65 @@ int treatEvents()
 
   // No event
   return 0;
+}
+
+int update(float dt)
+{
+  // Cap delta-time
+  if(dt > MAX_DT)
+    dt = MAX_DT;
+
+  // EXIT HAS STARTED
+  if(exiting >= 0)
+  {
+    exiting += dt;
+
+    float s = 256*(1.0f - exiting);
+
+    sprite.x = global::viewport.x * (0.5f + 0.5f * exiting) + s*0.5f*exiting - s*0.5f;
+    sprite.y = global::viewport.y * 0.5f - s*0.5f;
+    sprite.w = sprite.h = s;
+
+    if(exiting > 1)
+      return EVENT_QUIT;
+  }
+
+  // ENTER HAS STARTED
+  else if(entering >= 0 && entering < 1)
+  {
+    entering += dt;
+
+    float s = 256*entering;
+
+    sprite.x = global::viewport.x * 0.5f * entering - s*0.5f;
+    sprite.y = global::viewport.y * 0.5f - s*0.5f;
+    sprite.w = sprite.h = s;
+
+    if(entering > 1)
+      entering = 1;
+  }
+
+  // Treat input events
+  return treatEvents();
+}
+
+int draw()
+{
+  // Clear and reset
+  glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+  glMatrixMode(GL_MODELVIEW);
+
+  // Only draw if enter has begun
+  if(entering > 0)
+  {
+    texture.draw(nullptr, &sprite);
+  }
+
+  // Flip the buffers to update the screen
+  SDL_GL_SwapWindow(window);
+
+  // All good
+  return EXIT_SUCCESS;
 }
 
 //! --------------------------------------------------------------------------
@@ -215,13 +238,12 @@ int main(int argc, char *argv[])
     // Get the current time-stamp
     prev_tick = this_tick;
     this_tick = SDL_GetTicks();
-    update((this_tick - prev_tick)/1000.0f);
+
+    // Update, check for exit events
+    stop = (update((this_tick - prev_tick)/1000.0f) & EVENT_QUIT);
 
     // Redraw everything, game objects included
     draw();
-
-    // Treat input events, check for exit conditions.
-    stop = (treatEvents() & EVENT_QUIT);
   }
   while(!stop);
 
