@@ -97,9 +97,13 @@ int update(float dt)
   {
     exiting += dt;
 
-    float s = 256*(1.0f - exiting);
+    float p = exiting*exiting; // quadratic
 
-    sprite.x = global::viewport.x * (0.5f + 0.5f * exiting) + s*0.5f*exiting - s*0.5f;
+    float wheel = sin(PI*2*t);
+
+    float s = (196 + 64*wheel)*(1.0f - p);
+
+    sprite.x = global::viewport.x * (0.5f + 0.5f * p) + s*0.5f*p - s*0.5f;
     sprite.y = global::viewport.y * 0.5f - s*0.5f;
     sprite.w = sprite.h = s;
 
@@ -112,14 +116,31 @@ int update(float dt)
   {
     entering += dt;
 
-    float s = 256*entering;
+    float p = entering*entering; // quadratic
 
-    sprite.x = global::viewport.x * 0.5f * entering - s*0.5f;
+    float s = 256*p;
+
+    sprite.x = global::viewport.x * 0.5f * p - s*0.5f;
     sprite.y = global::viewport.y * 0.5f - s*0.5f;
     sprite.w = sprite.h = s;
 
     if(entering > 1)
       entering = 1;
+  }
+
+  // ENTER HAS FINISHED
+  else
+  {
+    t += dt;
+    if(t > 1)
+      t -= 1;
+    float wheel = sin(PI*2*t);
+
+    float s = 196 + 64*wheel;
+    sprite.x = global::viewport.x * 0.5f - s*0.5f;
+    sprite.y = global::viewport.y * 0.5f - s*0.5 + 0.2f*s*wheel;
+    sprite.h = sprite.w = s;
+
   }
 
   // Treat input events
@@ -133,7 +154,7 @@ int draw()
   glMatrixMode(GL_MODELVIEW);
 
   // Only draw if enter has begun
-  if(entering > 0)
+  if(entering > 0 && exiting < 1)
   {
     texture.draw(nullptr, &sprite);
   }
