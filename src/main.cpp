@@ -23,8 +23,8 @@
 // GRID
 // --------------------------------------------------------------------------
 
-#define GRID_W 1000
-#define GRID_H 1000
+#define GRID_W 300
+#define GRID_H 300
 #define TILE_LAVA 1
 #define TILE_ICE 2
 
@@ -112,17 +112,19 @@ int draw()
   {
     sprite.x = sprite.w*x;
     sprite.y = sprite.h*y;
-    switch(tiles[x][y])
-    {
-      case TILE_ICE:
-        ice.draw(nullptr, &sprite);
-      break;
-
-      case TILE_LAVA:
-        lava.draw(nullptr, &sprite);
-      break;
-    }
-  }
+    if(tiles[x][y] == TILE_ICE)
+      ice.draw(nullptr, &sprite);
+    else if(tiles[x][y] == TILE_LAVA)
+      lava.draw(nullptr, &sprite);
+  }/*
+  for(int x = 0; x < GRID_W; x++)
+  for(int y = 0; y < GRID_H; y++)
+  {
+    sprite.x = sprite.w*x;
+    sprite.y = sprite.h*y;
+    if(tiles[x][y] == TILE_LAVA)
+      lava.draw(nullptr, &sprite);
+  }*/
 
   // Flip the buffers to update the screen
   SDL_GL_SwapWindow(window);
