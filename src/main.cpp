@@ -25,7 +25,6 @@
 
 #define EVENT_QUIT 0b00000001
 
-
 //! --------------------------------------------------------------------------
 //! -------------------------- WORKSPACE
 //! --------------------------------------------------------------------------
@@ -92,7 +91,7 @@ int treatEvents()
   // Static to avoid reallocating it ever time we run the function
   static SDL_Event event;
 
-  // Write each event to our static variable
+  // Write each APP_NAMEevent to our static variable
   while (SDL_PollEvent(&event))
   {
     switch (event.type)
@@ -137,10 +136,8 @@ int main(int argc, char *argv[])
   // START SDL
   // --------------------------------------------------------------------------
 
-  {
-
   // Set up SDL (create window and context for OpenGL)
-	window = SDL_CreateWindow("Rubika", SDL_WINDOWPOS_UNDEFINED,
+	window = SDL_CreateWindow(APP_NAME, SDL_WINDOWPOS_UNDEFINED,
                            SDL_WINDOWPOS_UNDEFINED, WINDOW_DEFAULT_W,
                            WINDOW_DEFAULT_H, SDL_WINDOW_OPENGL|SDL_WINDOW_SHOWN);
   ASSERT_SDL(window, "Opening SDL2.0 application window");
@@ -158,8 +155,6 @@ int main(int argc, char *argv[])
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, GL_V_MAJOR);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, GL_V_MINOR);
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-
-  } // start sdl
 
   // --------------------------------------------------------------------------
   // START OPENGL
@@ -235,6 +230,14 @@ int main(int argc, char *argv[])
   // --------------------------------------------------------------------------
   // SHUT DOWN
   // --------------------------------------------------------------------------
+
+  // Destroy context
+  SDL_GL_MakeCurrent(NULL, NULL);
+  SDL_GL_DeleteContext(context);
+  SDL_DestroyWindow(window);
+
+  // Shut down SDL
+	SDL_Quit();
 
   // Report a clean exit!
 	return EXIT_SUCCESS;
