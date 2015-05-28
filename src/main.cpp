@@ -23,8 +23,8 @@
 // GRID
 // --------------------------------------------------------------------------
 
-#define GRID_W 300
-#define GRID_H 300
+#define GRID_W 50
+#define GRID_H 50
 #define TILE_LAVA 1
 #define TILE_ICE 2
 
@@ -44,7 +44,7 @@ static Texture atlas;
 
 static int tiles[GRID_W][GRID_H];
 
-static fRect sprite(0, 0, 4, 4),
+static fRect sprite(0, 0, 16, 16),
   lava(0, 0, 32, 32),
   ice(32, 0, 32, 32);
 
