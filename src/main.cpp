@@ -40,11 +40,13 @@
 
 static SDL_Window *window;
 
-static Texture lava, ice;
+static Texture atlas;
 
 static int tiles[GRID_W][GRID_H];
 
-static fRect sprite(0, 0, 4, 4);
+static fRect sprite(0, 0, 4, 4),
+  lava(0, 0, 32, 32),
+  ice(32, 0, 32, 32);
 
 //! --------------------------------------------------------------------------
 //! -------------------------- GAME LOOP
@@ -89,8 +91,6 @@ int treatEvents()
 int update(float dt)
 {
   log("dt = %f", dt);
-  // 0.033 = ice
-  // 0.017 = rien
 
   // Cap delta-time
   if(dt > MAX_DT)
@@ -112,19 +112,18 @@ int draw()
   {
     sprite.x = sprite.w*x;
     sprite.y = sprite.h*y;
-    if(tiles[x][y] == TILE_ICE)
-      ice.draw(nullptr, &sprite);
-    else if(tiles[x][y] == TILE_LAVA)
-      lava.draw(nullptr, &sprite);
-  }/*
+    switch(tiles[x][y])
+    {
+      case TILE_ICE:
+        atlas.draw(&ice, &sprite);
+        break;
+
+      case TILE_LAVA:
+        atlas.draw(&lava, &sprite);
+        break;
+    }
+  }
   for(int x = 0; x < GRID_W; x++)
-  for(int y = 0; y < GRID_H; y++)
-  {
-    sprite.x = sprite.w*x;
-    sprite.y = sprite.h*y;
-    if(tiles[x][y] == TILE_LAVA)
-      lava.draw(nullptr, &sprite);
-  }*/
 
   // Flip the buffers to update the screen
   SDL_GL_SwapWindow(window);
@@ -211,8 +210,7 @@ int main(int argc, char *argv[])
   // LOAD THE IMAGES
   // --------------------------------------------------------------------------
 
-  ASSERT(ice.load("assets/ice0.png") == EXIT_SUCCESS, "Opening ice texture");
-  ASSERT(lava.load("assets/lava0.png") == EXIT_SUCCESS, "Opening lava texture");
+  ASSERT(atlas.load("assets/atlas.png") == EXIT_SUCCESS, "Opening atlas texture");
 
   // --------------------------------------------------------------------------
   // INITIALISE THE GRID
