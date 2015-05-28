@@ -3,8 +3,9 @@
 //! --------------------------------------------------------------------------
 
 #include <cstdlib>
-#include <SDL.h>
 #include <ctime>
+#include <functional>
+#include <SDL.h>
 
 #include "debug/assert.h"
 
@@ -14,6 +15,12 @@
 #include "math/wjd_math.h"
 
 #include "global.hpp"
+
+//! --------------------------------------------------------------------------
+//! -------------------------- NAMESPACES
+//! --------------------------------------------------------------------------
+
+using namespace std;
 
 //! --------------------------------------------------------------------------
 //! -------------------------- CONSTANTS
@@ -29,32 +36,120 @@
 //! -------------------------- WORKSPACE
 //! --------------------------------------------------------------------------
 
-static SDL_Window *window;
-
-static Texture texture;
-
-fRect sprite(0, 0, 256, 256);
+static SDL_Window *window = nullptr;
 
 //! --------------------------------------------------------------------------
-//! -------------------------- GAME LOOP
+//! -------------------------- GAME STATES
 //! --------------------------------------------------------------------------
 
-static float t = 0.0f;
+// --------------------------------------------------------------------------
+// GAMESTATE STRUCTURE
+// --------------------------------------------------------------------------
 
-static float entering = -1.0f;
-static float exiting = -1.0f;
-
-int treatEvents()
+struct gamestate_t
 {
-  // Static to avoid reallocating it ever time we run the function
-  static SDL_Event event;
+  function<int(float dt)> update;
+  function<int()> draw;
+  function<int(SDL_Event &event)> treatEvent;
+  function<int(gamestate_t &previous)> enter;
+  function<int(gamestate_t &next)> leave;
+};
 
-  // Write each APP_NAMEevent to our static variable
-  while (SDL_PollEvent(&event))
+gamestate_t title, ingame, &current_state = title;
+
+int createStates()
+{
+  // --------------------------------------------------------------------------
+  // TITLE GAMESTATE
+  // --------------------------------------------------------------------------
+
+  {
+
+  float t = 0.0f;
+  float entering = -1.0f;
+  float exiting = -1.0f;
+  Texture texture;
+  fRect sprite(0, 0, 256, 256);
+
+  title.update = [&entering, &exiting, &t, &sprite](float dt)
+  {
+    // EXIT HAS STARTED
+    if(exiting >= 0)
+    {
+      exiting += dt;
+
+      float p = exiting*exiting; // quadratic
+
+      float wheel = sin(PI*2*t);
+
+      float s = (196 + 64*wheel)*(1.0f - p);
+
+      sprite.x = global::viewport.x * (0.5f + 0.5f * p) + s*0.5f*p - s*0.5f;
+      sprite.y = global::viewport.y * 0.5f - s*0.5f;
+      sprite.w = sprite.h = s;
+
+      if(exiting > 1)
+        return EVENT_QUIT;
+    }
+
+    // ENTER HAS STARTED
+    else if(entering >= 0 && entering < 1)
+    {
+      entering += dt;
+
+      float p = entering*entering; // quadratic
+
+      float s = 256*p;
+      sprite.w = sprite.h = s;
+
+      log("%f, %f, %f, %f", sprite.x, sprite.y, sprite.w, sprite.h);
+      log("view %f,%f", global::viewport.x, global::viewport.y);
+
+      sprite.x = global::viewport.x * 0.5f * p - s*0.5f;
+      sprite.y = global::viewport.y * 0.5f - s*0.5f;
+      sprite.w = sprite.h = s;
+
+      if(entering > 1)
+        entering = 1;
+    }
+
+    // ENTER HAS FINISHED
+    else
+    {
+      t += dt;
+      if(t > 1)
+        t -= 1;
+      float wheel = sin(PI*2*t);
+
+      float s = 196 + 64*wheel;
+      sprite.x = global::viewport.x * 0.5f - s*0.5f;
+      sprite.y = global::viewport.y * 0.5f - s*0.5 + 0.2f*s*wheel;
+      sprite.h = sprite.w = s;
+
+    }
+
+    // All okay
+    return 0;
+  };
+
+  title.draw = [entering, exiting, &texture, &sprite]()
+  {
+    // Only draw if enter has begun
+    if(entering > 0 && exiting < 1)
+    {
+      texture.draw(nullptr, &sprite);
+    }
+
+    // All okay
+    return 0;
+  };
+
+  title.treatEvent = [&entering, &exiting](SDL_Event &event)
   {
     switch (event.type)
     {
-      // Exit if the window is closed (ex: pressing the cross at the top)
+      // Exit if the window is closed
+      // (ex: pressing the cross at the top)
       case SDL_QUIT:
         return EVENT_QUIT;
       break;
@@ -80,11 +175,48 @@ int treatEvents()
         // not all possible inputs are needed, so we DO want a default break
       break;
     }
-  }
 
-  // No event
-  return 0;
+
+    // All okay
+    return 0;
+  };
+
+  title.leave = [&texture](gamestate_t &next)
+  {
+    log("Leaving title");
+
+    // Unload all the assets we used
+    texture.unload();
+
+    // All okay
+    return 0;
+  };
+
+  title.enter = [&texture](gamestate_t &previous)
+  {
+    log("Entering title");
+
+    // Load all the assets we need
+    ASSERT(texture.load("assets/eye_of_draining.png")
+           == EXIT_SUCCESS, "Opening texture");
+
+    // All okay
+    return 0;
+  };
+
+  } // title scope
+
+
+  // Initialise initial state
+  current_state.enter(current_state);
+
+  // All clear
+  return EXIT_SUCCESS;
 }
+
+//! --------------------------------------------------------------------------
+//! -------------------------- GAME LOOP
+//! --------------------------------------------------------------------------
 
 int update(float dt)
 {
@@ -92,59 +224,18 @@ int update(float dt)
   if(dt > MAX_DT)
     dt = MAX_DT;
 
-  // EXIT HAS STARTED
-  if(exiting >= 0)
-  {
-    exiting += dt;
-
-    float p = exiting*exiting; // quadratic
-
-    float wheel = sin(PI*2*t);
-
-    float s = (196 + 64*wheel)*(1.0f - p);
-
-    sprite.x = global::viewport.x * (0.5f + 0.5f * p) + s*0.5f*p - s*0.5f;
-    sprite.y = global::viewport.y * 0.5f - s*0.5f;
-    sprite.w = sprite.h = s;
-
-    if(exiting > 1)
-      return EVENT_QUIT;
-  }
-
-  // ENTER HAS STARTED
-  else if(entering >= 0 && entering < 1)
-  {
-    entering += dt;
-
-    float p = entering*entering; // quadratic
-
-    float s = 256*p;
-
-    sprite.x = global::viewport.x * 0.5f * p - s*0.5f;
-    sprite.y = global::viewport.y * 0.5f - s*0.5f;
-    sprite.w = sprite.h = s;
-
-    if(entering > 1)
-      entering = 1;
-  }
-
-  // ENTER HAS FINISHED
-  else
-  {
-    t += dt;
-    if(t > 1)
-      t -= 1;
-    float wheel = sin(PI*2*t);
-
-    float s = 196 + 64*wheel;
-    sprite.x = global::viewport.x * 0.5f - s*0.5f;
-    sprite.y = global::viewport.y * 0.5f - s*0.5 + 0.2f*s*wheel;
-    sprite.h = sprite.w = s;
-
-  }
+  // Update, accumulate event flags
+  int flags = current_state.update(dt);
 
   // Treat input events
-  return treatEvents();
+  static SDL_Event event;
+
+  // Write each event to our static variable
+  while (SDL_PollEvent(&event))
+    flags |= current_state.treatEvent(event);
+
+  // Returns flags
+  return flags;
 }
 
 int draw()
@@ -153,11 +244,8 @@ int draw()
   glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
   glMatrixMode(GL_MODELVIEW);
 
-  // Only draw if enter has begun
-  if(entering > 0 && exiting < 1)
-  {
-    texture.draw(nullptr, &sprite);
-  }
+  // Draw the current state
+  current_state.draw();
 
   // Flip the buffers to update the screen
   SDL_GL_SwapWindow(window);
@@ -189,6 +277,8 @@ int main(int argc, char *argv[])
   // Since the window size can be overriden, check what it is actually
   SDL_GetWindowSize(window, &global::viewport.x, &global::viewport.y);
   global::scale.x = global::scale.y = 1.0f;
+  global::viewport.x = WINDOW_DEFAULT_W;
+  global::viewport.y = WINDOW_DEFAULT_H;
 
   // Create the OpenGL context for the window we just opened
   auto context = SDL_GL_CreateContext(window);
@@ -241,10 +331,10 @@ int main(int argc, char *argv[])
   } // start opengl
 
   // --------------------------------------------------------------------------
-  // LOAD AN IMAGE
+  // CREATE GAMESTATES
   // --------------------------------------------------------------------------
 
-  ASSERT(texture.load("assets/eye_of_draining.png") == EXIT_SUCCESS, "Opening texture");
+  ASSERT(createStates() == EXIT_SUCCESS, "Creating states");
 
   // --------------------------------------------------------------------------
   // START THE GAME LOOP

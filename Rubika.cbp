@@ -43,8 +43,8 @@
 			<Add directory="%SDL_ROOT%/lib" />
 			<Add directory="%SDL_IMAGE_ROOT%/lib" />
 		</Linker>
-		<Unit filename="babysitter.cpp" />
-		<Unit filename="babysitter.h" />
+		<Unit filename="src/babysitter.cpp" />
+		<Unit filename="src/babysitter.h" />
 		<Unit filename="src/debug/assert.h" />
 		<Unit filename="src/debug/log.cpp" />
 		<Unit filename="src/debug/log.h" />
