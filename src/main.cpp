@@ -123,7 +123,6 @@ int draw()
         break;
     }
   }
-  for(int x = 0; x < GRID_W; x++)
 
   // Flip the buffers to update the screen
   SDL_GL_SwapWindow(window);
