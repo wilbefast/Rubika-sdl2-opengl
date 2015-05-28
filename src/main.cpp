@@ -55,7 +55,14 @@ struct gamestate_t
   function<int(gamestate_t &next)> leave;
 };
 
-gamestate_t title, ingame, &current_state = title;
+static gamestate_t title, ingame, &current_state = title;
+
+static float t = 0.0f;
+static float entering = 0.0f;
+static float exiting = -1.0f;
+static fRect sprite(0, 0, 256, 256);
+
+static Texture texture;
 
 int createStates()
 {
@@ -65,13 +72,7 @@ int createStates()
 
   {
 
-  float t = 0.0f;
-  float entering = -1.0f;
-  float exiting = -1.0f;
-  Texture texture;
-  fRect sprite(0, 0, 256, 256);
-
-  title.update = [&entering, &exiting, &t, &sprite](float dt)
+  title.update = [](float dt)
   {
     // EXIT HAS STARTED
     if(exiting >= 0)
@@ -102,9 +103,6 @@ int createStates()
       float s = 256*p;
       sprite.w = sprite.h = s;
 
-      log("%f, %f, %f, %f", sprite.x, sprite.y, sprite.w, sprite.h);
-      log("view %f,%f", global::viewport.x, global::viewport.y);
-
       sprite.x = global::viewport.x * 0.5f * p - s*0.5f;
       sprite.y = global::viewport.y * 0.5f - s*0.5f;
       sprite.w = sprite.h = s;
@@ -125,14 +123,13 @@ int createStates()
       sprite.x = global::viewport.x * 0.5f - s*0.5f;
       sprite.y = global::viewport.y * 0.5f - s*0.5 + 0.2f*s*wheel;
       sprite.h = sprite.w = s;
-
     }
 
     // All okay
     return 0;
   };
 
-  title.draw = [entering, exiting, &texture, &sprite]()
+  title.draw = []()
   {
     // Only draw if enter has begun
     if(entering > 0 && exiting < 1)
@@ -144,7 +141,7 @@ int createStates()
     return 0;
   };
 
-  title.treatEvent = [&entering, &exiting](SDL_Event &event)
+  title.treatEvent = [](SDL_Event &event)
   {
     switch (event.type)
     {
@@ -159,8 +156,6 @@ int createStates()
         switch (event.key.keysym.sym)
         {
           case SDLK_RETURN:
-            if(entering < 0)
-              entering = 0;
           break;
 
           case SDLK_ESCAPE:
@@ -181,7 +176,7 @@ int createStates()
     return 0;
   };
 
-  title.leave = [&texture](gamestate_t &next)
+  title.leave = [](gamestate_t &next)
   {
     log("Leaving title");
 
@@ -192,14 +187,13 @@ int createStates()
     return 0;
   };
 
-  title.enter = [&texture](gamestate_t &previous)
+  title.enter = [](gamestate_t &previous)
   {
     log("Entering title");
 
     // Load all the assets we need
     ASSERT(texture.load("assets/eye_of_draining.png")
            == EXIT_SUCCESS, "Opening texture");
-
     // All okay
     return 0;
   };
@@ -225,14 +219,14 @@ int update(float dt)
     dt = MAX_DT;
 
   // Update, accumulate event flags
-  int flags = current_state.update(dt);
+  int flags = title.update(dt);
 
   // Treat input events
   static SDL_Event event;
 
   // Write each event to our static variable
   while (SDL_PollEvent(&event))
-    flags |= current_state.treatEvent(event);
+    flags |= title.treatEvent(event);
 
   // Returns flags
   return flags;
@@ -245,7 +239,7 @@ int draw()
   glMatrixMode(GL_MODELVIEW);
 
   // Draw the current state
-  current_state.draw();
+  title.draw();
 
   // Flip the buffers to update the screen
   SDL_GL_SwapWindow(window);
@@ -297,7 +291,7 @@ int main(int argc, char *argv[])
   {
 
   // Define viewport
-  glViewport(0, 0, WINDOW_DEFAULT_W, WINDOW_DEFAULT_H);
+  glViewport(0, 0, global::viewport.x, global::viewport.y);
 
   // Black background by default
   glClearColor(0, 0, 0, 255);
