@@ -23,8 +23,10 @@
 // GRID
 // --------------------------------------------------------------------------
 
-#define GRID_W 100
-#define GRID_H 100
+#define GRID_W 1000
+#define GRID_H 1000
+#define TILE_LAVA 1
+#define TILE_ICE 2
 
 // --------------------------------------------------------------------------
 // EVENTS
@@ -40,7 +42,9 @@ static SDL_Window *window;
 
 static Texture lava, ice;
 
-fRect sprite(0, 0, 8, 8);
+static int tiles[GRID_W][GRID_H];
+
+static fRect sprite(0, 0, 4, 4);
 
 //! --------------------------------------------------------------------------
 //! -------------------------- GAME LOOP
@@ -84,6 +88,10 @@ int treatEvents()
 
 int update(float dt)
 {
+  log("dt = %f", dt);
+  // 0.033 = ice
+  // 0.017 = rien
+
   // Cap delta-time
   if(dt > MAX_DT)
     dt = MAX_DT;
@@ -104,7 +112,16 @@ int draw()
   {
     sprite.x = sprite.w*x;
     sprite.y = sprite.h*y;
-    ice.draw(nullptr, &sprite);
+    switch(tiles[x][y])
+    {
+      case TILE_ICE:
+        ice.draw(nullptr, &sprite);
+      break;
+
+      case TILE_LAVA:
+        lava.draw(nullptr, &sprite);
+      break;
+    }
   }
 
   // Flip the buffers to update the screen
@@ -195,6 +212,15 @@ int main(int argc, char *argv[])
   ASSERT(ice.load("assets/ice0.png") == EXIT_SUCCESS, "Opening ice texture");
   ASSERT(lava.load("assets/lava0.png") == EXIT_SUCCESS, "Opening lava texture");
 
+  // --------------------------------------------------------------------------
+  // INITIALISE THE GRID
+  // --------------------------------------------------------------------------
+
+  for(int x = 0; x < GRID_W; x++)
+  for(int y = 0; y < GRID_H; y++)
+  {
+    tiles[x][y] = (rand()%2 ? TILE_ICE : TILE_LAVA);
+  }
 
   // --------------------------------------------------------------------------
   // START THE GAME LOOP
