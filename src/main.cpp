@@ -40,13 +40,15 @@
 
 static SDL_Window *window;
 
-static Texture atlas;
+static Texture atlas, spaceship;
 
 static int tiles[GRID_W][GRID_H];
 
-static fRect sprite(0, 0, 16, 16),
-  lava(0, 0, 32, 32),
-  ice(32, 0, 32, 32);
+static fRect lava(0, 0, 32, 32),
+  ice(32, 0, 32, 32),
+  sprite(0, 0, 128, 128);
+
+static float angle = 0.0f;
 
 //! --------------------------------------------------------------------------
 //! -------------------------- GAME LOOP
@@ -90,11 +92,16 @@ int treatEvents()
 
 int update(float dt)
 {
-  log("dt = %f", dt);
-
   // Cap delta-time
   if(dt > MAX_DT)
     dt = MAX_DT;
+
+  // Spin the ship
+  angle += 360*dt;
+
+  // Centre the ship
+  sprite.x = (global::viewport.x - sprite.w) * 0.5f;
+  sprite.y = (global::viewport.y - sprite.h) * 0.5f;
 
   // Treat input events
   return treatEvents();
@@ -110,19 +117,24 @@ int draw()
   for(int x = 0; x < GRID_W; x++)
   for(int y = 0; y < GRID_H; y++)
   {
-    sprite.x = sprite.w*x;
-    sprite.y = sprite.h*y;
+    static fRect tile(0, 0, 32, 32);
+
+    tile.x = tile.w*x;
+    tile.y = tile.h*y;
     switch(tiles[x][y])
     {
       case TILE_ICE:
-        atlas.draw(&ice, &sprite);
+        atlas.draw(&ice, &tile);
         break;
 
       case TILE_LAVA:
-        atlas.draw(&lava, &sprite);
+        atlas.draw(&lava, &tile);
         break;
     }
   }
+
+  // Draw the sprite
+  spaceship.draw(nullptr, &sprite, angle);
 
   // Flip the buffers to update the screen
   SDL_GL_SwapWindow(window);
@@ -210,6 +222,7 @@ int main(int argc, char *argv[])
   // --------------------------------------------------------------------------
 
   ASSERT(atlas.load("assets/atlas.png") == EXIT_SUCCESS, "Opening atlas texture");
+  ASSERT(spaceship.load("assets/medspeedster.png") == EXIT_SUCCESS, "Opening spaceship texture");
 
   // --------------------------------------------------------------------------
   // INITIALISE THE GRID
