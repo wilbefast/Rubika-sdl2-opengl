@@ -20,6 +20,13 @@
 //! --------------------------------------------------------------------------
 
 // --------------------------------------------------------------------------
+// GRID
+// --------------------------------------------------------------------------
+
+#define GRID_W 100
+#define GRID_H 100
+
+// --------------------------------------------------------------------------
 // EVENTS
 // --------------------------------------------------------------------------
 
@@ -31,18 +38,13 @@
 
 static SDL_Window *window;
 
-static Texture texture;
+static Texture lava, ice;
 
-fRect sprite(0, 0, 256, 256);
+fRect sprite(0, 0, 8, 8);
 
 //! --------------------------------------------------------------------------
 //! -------------------------- GAME LOOP
 //! --------------------------------------------------------------------------
-
-static float t = 0.0f;
-
-static float entering = -1.0f;
-static float exiting = -1.0f;
 
 int treatEvents()
 {
@@ -63,14 +65,8 @@ int treatEvents()
       case SDL_KEYDOWN:
         switch (event.key.keysym.sym)
         {
-          case SDLK_RETURN:
-            if(entering < 0)
-              entering = 0;
-          break;
-
           case SDLK_ESCAPE:
-            if(entering >= 1 && exiting < 0)
-              exiting = 0;
+            return EVENT_QUIT;
           default:
             break;
         }
@@ -92,57 +88,6 @@ int update(float dt)
   if(dt > MAX_DT)
     dt = MAX_DT;
 
-  // EXIT HAS STARTED
-  if(exiting >= 0)
-  {
-    exiting += dt;
-
-    float p = exiting*exiting; // quadratic
-
-    float wheel = sin(PI*2*t);
-
-    float s = (196 + 64*wheel)*(1.0f - p);
-
-    sprite.x = global::viewport.x * (0.5f + 0.5f * p) + s*0.5f*p - s*0.5f;
-    sprite.y = global::viewport.y * 0.5f - s*0.5f;
-    sprite.w = sprite.h = s;
-
-    if(exiting > 1)
-      return EVENT_QUIT;
-  }
-
-  // ENTER HAS STARTED
-  else if(entering >= 0 && entering < 1)
-  {
-    entering += dt;
-
-    float p = entering*entering; // quadratic
-
-    float s = 256*p;
-
-    sprite.x = global::viewport.x * 0.5f * p - s*0.5f;
-    sprite.y = global::viewport.y * 0.5f - s*0.5f;
-    sprite.w = sprite.h = s;
-
-    if(entering > 1)
-      entering = 1;
-  }
-
-  // ENTER HAS FINISHED
-  else
-  {
-    t += dt;
-    if(t > 1)
-      t -= 1;
-    float wheel = sin(PI*2*t);
-
-    float s = 196 + 64*wheel;
-    sprite.x = global::viewport.x * 0.5f - s*0.5f;
-    sprite.y = global::viewport.y * 0.5f - s*0.5 + 0.2f*s*wheel;
-    sprite.h = sprite.w = s;
-
-  }
-
   // Treat input events
   return treatEvents();
 }
@@ -153,10 +98,13 @@ int draw()
   glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
   glMatrixMode(GL_MODELVIEW);
 
-  // Only draw if enter has begun
-  if(entering > 0 && exiting < 1)
+  // Draw the grid
+  for(int x = 0; x < GRID_W; x++)
+  for(int y = 0; y < GRID_H; y++)
   {
-    texture.draw(nullptr, &sprite);
+    sprite.x = sprite.w*x;
+    sprite.y = sprite.h*y;
+    ice.draw(nullptr, &sprite);
   }
 
   // Flip the buffers to update the screen
@@ -241,10 +189,12 @@ int main(int argc, char *argv[])
   } // start opengl
 
   // --------------------------------------------------------------------------
-  // LOAD AN IMAGE
+  // LOAD THE IMAGES
   // --------------------------------------------------------------------------
 
-  ASSERT(texture.load("assets/eye_of_draining.png") == EXIT_SUCCESS, "Opening texture");
+  ASSERT(ice.load("assets/ice0.png") == EXIT_SUCCESS, "Opening ice texture");
+  ASSERT(lava.load("assets/lava0.png") == EXIT_SUCCESS, "Opening lava texture");
+
 
   // --------------------------------------------------------------------------
   // START THE GAME LOOP
