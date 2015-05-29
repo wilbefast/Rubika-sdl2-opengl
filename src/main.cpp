@@ -13,6 +13,8 @@
 
 #include "math/wjd_math.h"
 
+#include "spaceship.h"
+
 #include "global.hpp"
 
 //! --------------------------------------------------------------------------
@@ -40,23 +42,12 @@
 
 static SDL_Window *window;
 
-static Texture atlas, spaceship;
+static Texture atlas;
 
 static int tiles[GRID_W][GRID_H];
 
 static fRect lava(0, 0, 32, 32),
-  ice(32, 0, 32, 32),
-  sprite(0, 0, 128, 128);
-
-static float spaceship_x = 0.0f;
-static float spaceship_y = 0.0f;
-static float spaceship_dx = 0.0f;
-static float spaceship_dy = -1.0f;
-
-static float c = cos(PI*0.01);
-static float s = sin(PI*0.01);
-
-static float mouse_x = 0.0f, mouse_y = 0.0f;
+  ice(32, 0, 32, 32);
 
 //! --------------------------------------------------------------------------
 //! -------------------------- GAME LOOP
@@ -89,8 +80,8 @@ int treatEvents()
       break;
 
       case SDL_MOUSEMOTION:
-        mouse_x = event.motion.x;
-        mouse_y = event.motion.y;
+        global::mouse_x = event.motion.x;
+        global::mouse_y = event.motion.y;
       break;
 
       default:
@@ -109,44 +100,11 @@ int update(float dt)
   if(dt > MAX_DT)
     dt = MAX_DT;
 
-  // Turn the ship
-  float vx = mouse_x - spaceship_x;
-  float vy = mouse_y - spaceship_y;
-
-  float norm_v = sqrt(vx*vx + vy*vy);
-  float nvx = vx/norm_v;
-  float nvy = vy/norm_v;
-
-  // Do we need to turn
-  float dot = spaceship_dx*nvx + spaceship_dy*nvy;
-  if(dot < 0.99)
-  {
-    // Which direction shall we turn in?
-    float det = spaceship_dx*vy - spaceship_dy*vx;
-    float ss = det < 0 ? -s : s;
-
-    spaceship_dx = spaceship_dx*c - spaceship_dy*ss;
-    spaceship_dy = spaceship_dx*ss + spaceship_dy*c;
-
-    // Normally we shouldn't need to do this!!!
-    float norm = sqrt(spaceship_dx*spaceship_dx + spaceship_dy*spaceship_dy);
-    spaceship_dx /= norm;
-    spaceship_dy /= norm;
-  }
-
-  // Move the spaceship towards its destination
-  if(norm_v > 16)
-  {
-    spaceship_x += 256*spaceship_dx*dt;
-    spaceship_y += 256*spaceship_dy*dt;
-  }
-
-  // Move the spaceship to the its model position
-  sprite.x = spaceship_x - sprite.w*0.5f;
-  sprite.y = spaceship_y - sprite.h*0.5f;
+  // Update all the spaceships
+  int flags = spaceship::update(dt);
 
   // Treat input events
-  return treatEvents();
+  return flags | treatEvents();
 }
 
 int draw()
@@ -176,34 +134,14 @@ int draw()
     }
   }
 */
-  // Draw the sprite
-  spaceship.draw(nullptr, &sprite);
-
-  // Debug
-  float x = spaceship_x + spaceship_dx*128;
-  float y = spaceship_y + spaceship_dy*128;
-  fRect little(0, 0, 16, 16);
-  for(float t = 0.0f; t < 1.0f; t += 0.1f)
-  {
-    // Draw the spaceship's direction
-    glColor4f(1.0f, 0.0f, 0.0f, 1);
-    little.x = (1 - t)*spaceship_x + t*x - 8;
-    little.y = (1 - t)*spaceship_y + t*y - 8;
-    spaceship.draw(nullptr, &little);
-
-    // Draw the mouse direction
-    glColor4f(0.0f, 0.0f, 1.0f, 1);
-    little.x = (1 - t)*spaceship_x + t*mouse_x - 8;
-    little.y = (1 - t)*spaceship_y + t*mouse_y - 8;
-    spaceship.draw(nullptr, &little);
-  }
-  glColor4f(1.0f, 1.0f, 1.0f, 1);
+  // Draw all the spaceships
+  int flags = spaceship::draw();
 
   // Flip the buffers to update the screen
   SDL_GL_SwapWindow(window);
 
-  // All good
-  return EXIT_SUCCESS;
+  // Returns flags
+  return flags;
 }
 
 //! --------------------------------------------------------------------------
@@ -285,7 +223,6 @@ int main(int argc, char *argv[])
   // --------------------------------------------------------------------------
 
   ASSERT(atlas.load("assets/atlas.png") == EXIT_SUCCESS, "Opening atlas texture");
-  ASSERT(spaceship.load("assets/medspeedster.png") == EXIT_SUCCESS, "Opening spaceship texture");
 
   // --------------------------------------------------------------------------
   // INITIALISE THE GRID
@@ -301,8 +238,13 @@ int main(int argc, char *argv[])
   // INITIALISE THE GAME OBJECTS
   // --------------------------------------------------------------------------
 
-  spaceship_x = global::viewport.x*0.5f;
-  spaceship_y = global::viewport.y*0.5f;
+  ASSERT(spaceship::init() == EXIT_SUCCESS, "Initialising spaceship module");
+
+  spaceship::spawn(100, 100);
+  spaceship::spawn(300, 500);
+  spaceship::spawn(500, 300);
+
+
 
   // --------------------------------------------------------------------------
   // START THE GAME LOOP
