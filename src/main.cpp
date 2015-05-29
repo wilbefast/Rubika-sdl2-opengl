@@ -48,6 +48,8 @@ static fRect lava(0, 0, 32, 32),
   ice(32, 0, 32, 32),
   sprite(0, 0, 128, 128);
 
+static float spaceship_x = 0.0f;
+static float spaceship_y = 0.0f;
 static float spaceship_dx = 0.0f;
 static float spaceship_dy = -1.0f;
 
@@ -55,32 +57,6 @@ static float c = cos(PI*0.01);
 static float s = sin(PI*0.01);
 
 static float mouse_x = 0.0f, mouse_y = 0.0f;
-
-//! --------------------------------------------------------------------------
-//! -------------------------- GAME LOOP
-//! --------------------------------------------------------------------------
-
-
-// The public line-drawing functions are just adaptors for this one
-void draw_line(float start_x, float start_y, float end_x, float end_y)
-{
-  GLfloat points[4] = { start_x, start_y, end_x, end_y };
-
-  // Start up
-  glPushMatrix();
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnable(GL_LINE_SMOOTH);
-    glColor4f(1, 1, 1, 1);
-
-    // Draw points
-    glVertexPointer(2, GL_FLOAT, 0, points);
-    glDrawArrays(GL_LINES, 0, 2);
-
-    // Shut down
-    glDisable(GL_LINE_SMOOTH);
-    glDisableClientState(GL_VERTEX_ARRAY);
-  glPopMatrix();
-}
 
 //! --------------------------------------------------------------------------
 //! -------------------------- GAME LOOP
@@ -133,15 +109,9 @@ int update(float dt)
   if(dt > MAX_DT)
     dt = MAX_DT;
 
-  // Centre the ship
-  sprite.x = (global::viewport.x - sprite.w) * 0.5f;
-  sprite.y = (global::viewport.y - sprite.h) * 0.5f;
-
   // Turn the ship
-  float x = sprite.x - sprite.w*0.5f;
-  float y = sprite.y - sprite.h*0.5f;
-  float vx = mouse_x - x;
-  float vy = mouse_y - y;
+  float vx = mouse_x - spaceship_x;
+  float vy = mouse_y - spaceship_y;
 
   float norm_v = sqrt(vx*vx + vy*vy);
   float nvx = vx/norm_v;
@@ -149,7 +119,7 @@ int update(float dt)
 
   // Do we need to turn
   float dot = spaceship_dx*nvx + spaceship_dy*nvy;
-  if(dot < 0.9)
+  if(dot < 0.99)
   {
     // Which direction shall we turn in?
     float det = spaceship_dx*vy - spaceship_dy*vx;
@@ -157,11 +127,16 @@ int update(float dt)
 
     spaceship_dx = spaceship_dx*c - spaceship_dy*ss;
     spaceship_dy = spaceship_dx*ss + spaceship_dy*c;
+
+    // Normally we shouldn't need to do this!!!
     float norm = sqrt(spaceship_dx*spaceship_dx + spaceship_dy*spaceship_dy);
     spaceship_dx /= norm;
     spaceship_dy /= norm;
   }
 
+  // Move the spaceship to the its model position
+  sprite.x = spaceship_x - sprite.w*0.5f;
+  sprite.y = spaceship_y - sprite.h*0.5f;
 
   // Treat input events
   return treatEvents();
@@ -298,6 +273,13 @@ int main(int argc, char *argv[])
   {
     tiles[x][y] = (rand()%2 ? TILE_ICE : TILE_LAVA);
   }
+
+  // --------------------------------------------------------------------------
+  // INITIALISE THE GAME OBJECTS
+  // --------------------------------------------------------------------------
+
+  spaceship_x = global::viewport.x*0.5f;
+  spaceship_y = global::viewport.y*0.5f;
 
   // --------------------------------------------------------------------------
   // START THE GAME LOOP
