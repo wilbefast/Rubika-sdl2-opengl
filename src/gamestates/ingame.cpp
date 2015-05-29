@@ -9,16 +9,18 @@
 
 #include "../debug/assert.h"
 
-#define GRID_W 300
-#define GRID_H 300
+#define GRID_W 30
+#define GRID_H 30
 #define TILE_LAVA 1
 #define TILE_ICE 2
 
-static Texture atlas;
+static Texture atlas, spaceship;
 static int tiles[GRID_W][GRID_H];
-static fRect sprite(0, 0, 4, 4),
+static fRect sprite(0, 0, 180, 180),
   lava(0, 0, 32, 32),
   ice(32, 0, 32, 32);
+
+static float angle = 0.0f;
 
 namespace gamestate
 {
@@ -31,7 +33,12 @@ static int init()
 {
   state.update = [](float dt)
   {
+    // Spin the ship
+    angle += 360*dt;
 
+    // Centre the ship
+    sprite.x = (global::viewport.x - sprite.w) * 0.5f;
+    sprite.y = (global::viewport.y - sprite.h) * 0.5f;
 
     // All okay
     return 0;
@@ -44,19 +51,23 @@ static int init()
     for(int x = 0; x < GRID_W; x++)
     for(int y = 0; y < GRID_H; y++)
     {
-      sprite.x = sprite.w*x;
-      sprite.y = sprite.h*y;
+      static fRect stamp(0, 0, 40, 40);
+      stamp.x = stamp.w*x;
+      stamp.y = stamp.h*y;
       switch(tiles[x][y])
       {
         case TILE_ICE:
-          atlas.draw(&ice, &sprite);
+          atlas.draw(&ice, &stamp);
           break;
 
         case TILE_LAVA:
-          atlas.draw(&lava, &sprite);
+          atlas.draw(&lava, &stamp);
           break;
       }
     }
+
+    // Draw the ship
+    spaceship.draw(nullptr, &sprite, angle);
 
     // All okay
     return 0;
@@ -102,6 +113,7 @@ static int init()
 
     // Unload all the assets we used
     atlas.unload();
+    spaceship.unload();
 
     // All okay
     return 0;
@@ -120,6 +132,7 @@ static int init()
 
     // Load all the assets we need
     ASSERT(atlas.load("assets/atlas.png") == EXIT_SUCCESS, "Opening atlas texture");
+    ASSERT(spaceship.load("assets/medspeedster.png") == EXIT_SUCCESS, "Opening spaceship texture");
 
     // All okay
     return 0;
