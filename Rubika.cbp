@@ -56,7 +56,9 @@
 		<Unit filename="src/graphics/opengl.h" />
 		<Unit filename="src/main.cpp" />
 		<Unit filename="src/math/Rect.hpp" />
+		<Unit filename="src/math/Rect.inl" />
 		<Unit filename="src/math/V2.hpp" />
+		<Unit filename="src/math/V2.inl" />
 		<Unit filename="src/math/wjd_math.cpp" />
 		<Unit filename="src/math/wjd_math.h" />
 		<Extensions>

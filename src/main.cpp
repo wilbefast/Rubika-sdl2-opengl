@@ -48,7 +48,39 @@ static fRect lava(0, 0, 32, 32),
   ice(32, 0, 32, 32),
   sprite(0, 0, 128, 128);
 
-static float angle = 0.0f;
+static float spaceship_dx = 0.0f;
+static float spaceship_dy = -1.0f;
+
+static float c = cos(PI*0.01);
+static float s = sin(PI*0.01);
+
+static float mouse_x = 0.0f, mouse_y = 0.0f;
+
+//! --------------------------------------------------------------------------
+//! -------------------------- GAME LOOP
+//! --------------------------------------------------------------------------
+
+
+// The public line-drawing functions are just adaptors for this one
+void draw_line(float start_x, float start_y, float end_x, float end_y)
+{
+  GLfloat points[4] = { start_x, start_y, end_x, end_y };
+
+  // Start up
+  glPushMatrix();
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnable(GL_LINE_SMOOTH);
+    glColor4f(1, 1, 1, 1);
+
+    // Draw points
+    glVertexPointer(2, GL_FLOAT, 0, points);
+    glDrawArrays(GL_LINES, 0, 2);
+
+    // Shut down
+    glDisable(GL_LINE_SMOOTH);
+    glDisableClientState(GL_VERTEX_ARRAY);
+  glPopMatrix();
+}
 
 //! --------------------------------------------------------------------------
 //! -------------------------- GAME LOOP
@@ -80,6 +112,11 @@ int treatEvents()
         }
       break;
 
+      case SDL_MOUSEMOTION:
+        mouse_x = event.motion.x;
+        mouse_y = event.motion.y;
+      break;
+
       default:
         // not all possible inputs are needed, so we DO want a default break
       break;
@@ -96,12 +133,35 @@ int update(float dt)
   if(dt > MAX_DT)
     dt = MAX_DT;
 
-  // Spin the ship
-  angle += 360*dt;
-
   // Centre the ship
   sprite.x = (global::viewport.x - sprite.w) * 0.5f;
   sprite.y = (global::viewport.y - sprite.h) * 0.5f;
+
+  // Turn the ship
+  float x = sprite.x - sprite.w*0.5f;
+  float y = sprite.y - sprite.h*0.5f;
+  float vx = mouse_x - x;
+  float vy = mouse_y - y;
+
+  float norm_v = sqrt(vx*vx + vy*vy);
+  float nvx = vx/norm_v;
+  float nvy = vy/norm_v;
+
+  // Do we need to turn
+  float dot = spaceship_dx*nvx + spaceship_dy*nvy;
+  if(dot < 0.9)
+  {
+    // Which direction shall we turn in?
+    float det = spaceship_dx*vy - spaceship_dy*vx;
+    float ss = det < 0 ? -s : s;
+
+    spaceship_dx = spaceship_dx*c - spaceship_dy*ss;
+    spaceship_dy = spaceship_dx*ss + spaceship_dy*c;
+    float norm = sqrt(spaceship_dx*spaceship_dx + spaceship_dy*spaceship_dy);
+    spaceship_dx /= norm;
+    spaceship_dy /= norm;
+  }
+
 
   // Treat input events
   return treatEvents();
@@ -114,6 +174,7 @@ int draw()
   glMatrixMode(GL_MODELVIEW);
 
   // Draw the grid
+/*
   for(int x = 0; x < GRID_W; x++)
   for(int y = 0; y < GRID_H; y++)
   {
@@ -132,9 +193,13 @@ int draw()
         break;
     }
   }
-
+*/
   // Draw the sprite
-  spaceship.draw(nullptr, &sprite, angle);
+  spaceship.draw(nullptr, &sprite);
+  float x = sprite.x + sprite.w*0.5f + spaceship_dx*128;
+  float y = sprite.y + sprite.h*0.5f + spaceship_dy*128;
+  fRect little(x - 8, y - 8, 16, 16);
+  spaceship.draw(nullptr, &little);
 
   // Flip the buffers to update the screen
   SDL_GL_SwapWindow(window);
