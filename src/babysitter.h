@@ -2,11 +2,11 @@
 
 #include <functional>
 
-namespace babbysitter
+namespace babysitter
 {
   int update(float dt);
 
-  int sit(std::function<float(float, float)> baby_step);
+  int sit(std::function<float(float progress, float dt)> baby_step);
 
   int clear();
 }

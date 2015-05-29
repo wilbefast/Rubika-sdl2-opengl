@@ -18,6 +18,8 @@
 
 #include "global.hpp"
 
+#include "babysitter.h"
+
 //! --------------------------------------------------------------------------
 //! -------------------------- NAMESPACES
 //! --------------------------------------------------------------------------
@@ -43,12 +45,14 @@ int update(float dt)
   // Update, accumulate event flags
   int flags = gamestate::update(dt);
 
+  // Babysitter
+  flags |= babysitter::update(dt);
+
   // Treat input events
   static SDL_Event event;
-
-  // Write each event to our static variable
   while (SDL_PollEvent(&event))
     flags |= gamestate::treatEvent(event);
+
 
   // Returns flags
   return flags;

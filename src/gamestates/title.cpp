@@ -9,6 +9,8 @@
 
 #include "../debug/assert.h"
 
+#include "../babysitter.h"
+
 static float time;
 static float entering;
 static float exiting;
@@ -157,6 +159,18 @@ static int init()
   state.enter = [](gamestate::t &previous)
   {
     log("Entering title");
+
+    babysitter::sit([](float progress, float dt)
+    {
+      log("progress = %f", progress);
+
+      float next_progress = progress + dt;
+
+      if(next_progress >= 1.0f)
+        ; // trucs à faire le dernier update
+
+      return next_progress;
+    });
 
     // Reset state
     time = 0.0f;
