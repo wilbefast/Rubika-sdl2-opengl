@@ -49,6 +49,10 @@
 		<Unit filename="src/debug/log.cpp" />
 		<Unit filename="src/debug/log.h" />
 		<Unit filename="src/debug/warn.h" />
+		<Unit filename="src/gamestates/gamestate.cpp" />
+		<Unit filename="src/gamestates/gamestate.h" />
+		<Unit filename="src/gamestates/title.cpp" />
+		<Unit filename="src/gamestates/title.h" />
 		<Unit filename="src/global.cpp" />
 		<Unit filename="src/global.hpp" />
 		<Unit filename="src/graphics/Texture.cpp" />

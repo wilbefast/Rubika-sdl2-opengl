@@ -9,6 +9,8 @@
 #define MAX_DT 1.0f/MIN_FPS
 #define APP_NAME "Fibonacci Simulator 2014"
 
+#define EVENT_QUIT 0b00000001
+
 namespace global
 {
   extern iV2 viewport;
