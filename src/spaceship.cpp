@@ -20,7 +20,9 @@ struct spaceship_t
   float y;
   float dx;
   float dy;
+  bool update_on_even;
 };
+static bool even_frame = true;
 
 static list<spaceship_t*> instances;
 
@@ -32,9 +34,14 @@ namespace spaceship
 
   int update(float dt)
   {
+    even_frame = !even_frame;
+
     for(auto i = instances.begin(); i != instances.end(); i++)
     {
       spaceship_t &s = (**i);
+
+      if(even_frame != s.update_on_even)
+        continue;
 
       // Turn the ship
       float vx = global::mouse_x - s.x;
@@ -113,7 +120,8 @@ namespace spaceship
 
   int init()
   {
-     ASSERT(texture.load("assets/medspeedster.png") == EXIT_SUCCESS, "Opening spaceship texture");
+     ASSERT(texture.load("assets/medspeedster.png")
+          == EXIT_SUCCESS, "Opening spaceship texture");
 
      // Success
      return EXIT_SUCCESS;
@@ -127,6 +135,7 @@ namespace spaceship
     s->y = y;
     s->dx = 0.0f;
     s->dy = 1.0f;
+    s->update_on_even = (even_frame = !even_frame);
 
     instances.push_back(s);
 
