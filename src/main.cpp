@@ -134,6 +134,13 @@ int update(float dt)
     spaceship_dy /= norm;
   }
 
+  // Move the spaceship towards its destination
+  if(norm_v > 16)
+  {
+    spaceship_x += 256*spaceship_dx*dt;
+    spaceship_y += 256*spaceship_dy*dt;
+  }
+
   // Move the spaceship to the its model position
   sprite.x = spaceship_x - sprite.w*0.5f;
   sprite.y = spaceship_y - sprite.h*0.5f;
@@ -179,15 +186,18 @@ int draw()
   for(float t = 0.0f; t < 1.0f; t += 0.1f)
   {
     // Draw the spaceship's direction
+    glColor4f(1.0f, 0.0f, 0.0f, 1);
     little.x = (1 - t)*spaceship_x + t*x - 8;
     little.y = (1 - t)*spaceship_y + t*y - 8;
     spaceship.draw(nullptr, &little);
 
     // Draw the mouse direction
+    glColor4f(0.0f, 0.0f, 1.0f, 1);
     little.x = (1 - t)*spaceship_x + t*mouse_x - 8;
     little.y = (1 - t)*spaceship_y + t*mouse_y - 8;
     spaceship.draw(nullptr, &little);
   }
+  glColor4f(1.0f, 1.0f, 1.0f, 1);
 
   // Flip the buffers to update the screen
   SDL_GL_SwapWindow(window);
