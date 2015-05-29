@@ -171,10 +171,23 @@ int draw()
 */
   // Draw the sprite
   spaceship.draw(nullptr, &sprite);
-  float x = sprite.x + sprite.w*0.5f + spaceship_dx*128;
-  float y = sprite.y + sprite.h*0.5f + spaceship_dy*128;
-  fRect little(x - 8, y - 8, 16, 16);
-  spaceship.draw(nullptr, &little);
+
+  // Debug
+  float x = spaceship_x + spaceship_dx*128;
+  float y = spaceship_y + spaceship_dy*128;
+  fRect little(0, 0, 16, 16);
+  for(float t = 0.0f; t < 1.0f; t += 0.1f)
+  {
+    // Draw the spaceship's direction
+    little.x = (1 - t)*spaceship_x + t*x - 8;
+    little.y = (1 - t)*spaceship_y + t*y - 8;
+    spaceship.draw(nullptr, &little);
+
+    // Draw the mouse direction
+    little.x = (1 - t)*spaceship_x + t*mouse_x - 8;
+    little.y = (1 - t)*spaceship_y + t*mouse_y - 8;
+    spaceship.draw(nullptr, &little);
+  }
 
   // Flip the buffers to update the screen
   SDL_GL_SwapWindow(window);
