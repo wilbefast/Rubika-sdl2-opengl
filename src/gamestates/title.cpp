@@ -1,5 +1,7 @@
 #include "title.h"
 
+#include "ingame.h"
+
 #include "../math/wjd_math.h"
 #include "../math/Rect.hpp"
 #include "../graphics/Texture.hpp"
@@ -12,7 +14,7 @@ static float entering;
 static float exiting;
 static fRect sprite(0, 0, 256, 256);
 static Texture texture;
-
+static bool toInGame;
 
 namespace gamestate
 {
@@ -42,7 +44,13 @@ static int init()
       sprite.w = sprite.h = s;
 
       if(exiting > 1)
-        return EVENT_QUIT;
+      {
+        if(toInGame)
+          return gamestate::switchTo(ingame::get());
+        else
+          return EVENT_QUIT;
+      }
+
     }
 
     // ENTER HAS STARTED
@@ -108,6 +116,11 @@ static int init()
         switch (event.key.keysym.sym)
         {
           case SDLK_RETURN:
+            if(entering >= 1 && exiting < 0)
+            {
+              exiting = 0;
+              toInGame = true;
+            }
           break;
 
           case SDLK_ESCAPE:
@@ -130,7 +143,7 @@ static int init()
 
   state.leave = [](gamestate::t &next)
   {
-    log("Leaving state");
+    log("Leaving title");
 
     // Unload all the assets we used
     texture.unload();
@@ -141,12 +154,13 @@ static int init()
 
   state.enter = [](gamestate::t &previous)
   {
-    log("Entering state");
+    log("Entering title");
 
     // Reset state
     time = 0.0f;
     entering = 0.0f;
     exiting = -1.0f;
+    toInGame = false;
 
     // Load all the assets we need
     ASSERT(texture.load("assets/eye_of_draining.png")
