@@ -51,6 +51,8 @@
 		<Unit filename="src/debug/warn.h" />
 		<Unit filename="src/gamestates/gamestate.cpp" />
 		<Unit filename="src/gamestates/gamestate.h" />
+		<Unit filename="src/gamestates/ingame.cpp" />
+		<Unit filename="src/gamestates/ingame.h" />
 		<Unit filename="src/gamestates/title.cpp" />
 		<Unit filename="src/gamestates/title.h" />
 		<Unit filename="src/global.cpp" />
